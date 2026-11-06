@@ -14,11 +14,17 @@ Open `http://localhost:3000`. The booking form validates date, time and email an
 ## Deploy on Vercel
 
 1. Import the GitHub repository into Vercel.
-2. Set `ADMIN_PASSWORD` in Vercel project environment variables.
-3. Add a Postgres provider (Vercel Postgres, Neon or Supabase) and set `DATABASE_URL`.
-4. Add a Resend API key as `RESEND_API_KEY` to send real confirmation emails.
+2. Add a Vercel Postgres/Neon integration. Its `POSTGRES_URL` variable is used automatically.
+3. Create a Google OAuth web application. Set the authorised redirect URI to `https://YOUR-DOMAIN/api/auth/callback/google`.
+4. Add these Vercel environment variables:
+   - `GOOGLE_CLIENT_ID`
+   - `GOOGLE_CLIENT_SECRET`
+   - `NEXTAUTH_SECRET` (a long random value)
+   - `NEXTAUTH_URL` (your production URL)
+   - `ADMIN_EMAILS` (comma-separated Google email addresses allowed into `/admin`)
+5. Redeploy after saving the variables.
 
-The current UI is dependency-light and deployable immediately. The form submission and admin records are the next integration point for a production database and payment provider.
+The first request/login automatically creates the `app_users` and `bookings` tables. Booking requests are persisted in Postgres and the admin dashboard reads the real rows.
 
 ## Product defaults
 
