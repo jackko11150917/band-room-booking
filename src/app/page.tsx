@@ -71,9 +71,10 @@ export default function Home() {
     try {
       const response = await fetch("/api/bookings", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ roomId, date, slot, duration, email }) });
       const text = await response.text();
-      const result = text ? JSON.parse(text) as { error?: string } : {};
+      const result = text ? JSON.parse(text) as { error?: string; checkoutUrl?: string } : {};
       if (!response.ok) throw new Error(result.error ?? "預約未能完成，請稍後再試。");
-      setSubmitted(true);
+      if (!result.checkoutUrl) throw new Error("付款頁面未能建立，請稍後再試。");
+      window.location.href = result.checkoutUrl;
     } catch (bookingError) {
       setError(bookingError instanceof Error ? bookingError.message : "預約未能完成，請稍後再試。");
     } finally {

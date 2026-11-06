@@ -24,7 +24,10 @@ Open `http://localhost:3000`. The booking form validates date, time and email an
    - `ADMIN_EMAILS` (comma-separated Google email addresses allowed into `/admin`)
 5. Redeploy after saving the variables.
 
-The first request/login automatically creates the `app_users` and `bookings` tables. Booking requests are persisted in Postgres and the admin dashboard reads the real rows.
+6. Create a Stripe webhook for `https://YOUR-DOMAIN/api/stripe/webhook`, listen for `checkout.session.completed`, and save its signing secret as `STRIPE_WEBHOOK_SECRET`.
+7. Add `STRIPE_SECRET_KEY`, `RESEND_API_KEY`, and `EMAIL_FROM`.
+
+The first request/login automatically creates the `app_users` and `bookings` tables. A booking is only marked `CONFIRMED` after Stripe payment succeeds; Resend then emails the customer.
 
 ## Product defaults
 

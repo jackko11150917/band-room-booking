@@ -30,6 +30,8 @@ export function ensureSchema() {
       CREATE INDEX IF NOT EXISTS bookings_schedule_idx
       ON bookings (booking_date, room_id, start_time)
     `;
+    await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS stripe_session_id TEXT UNIQUE`;
+    await sql`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS confirmed_at TIMESTAMPTZ`;
   })().catch((error) => {
     schemaReady = undefined;
     throw error;

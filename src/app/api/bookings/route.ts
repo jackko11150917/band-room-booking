@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
 import { sql } from "@vercel/postgres";
 import { ensureSchema } from "@/lib/db";
+import Stripe from "stripe";
 
 const roomIds = new Set(["a", "b", "c"]);
 const slots = new Set(["10:00", "12:00", "14:00", "16:00", "18:00", "20:00"]);
+const prices: Record<string, number> = { a: 180, b: 140, c: 240 };
 
 export async function GET(request: Request) {
   const date = new URL(request.url).searchParams.get("date");
@@ -51,11 +53,33 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "That slot is no longer available." }, { status: 409 });
     }
 
-    await sql`
+    const booking = await sql<{ id: number }>`
       INSERT INTO bookings (room_id, booking_date, start_time, duration_hours, contact_email)
       VALUES (${body.roomId}, ${body.date}, ${body.slot}, ${duration}, ${body.email.toLowerCase()})
+      RETURNING id
     `;
-    return NextResponse.json({ ok: true });
+    if (!process.env.STRIPE_SECRET_KEY) {
+      return NextResponse.json({ error: "付款服務尚未設定，請稍後再試。" }, { status: 503 });
+    }
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+    const origin = new URL(request.url).origin;
+    const checkout = await stripe.checkout.sessions.create({
+      mode: "payment",
+      customer_email: body.email.toLowerCase(),
+      line_items: [{
+        quantity: duration,
+        price_data: {
+          currency: "hkd",
+          unit_amount: prices[body.roomId] * 100,
+          product_data: { name: `ROOM ${body.roomId.toUpperCase()} 排練室` },
+        },
+      }],
+      metadata: { bookingId: String(booking.rows[0].id) },
+      success_url: `${origin}/?payment=success#book`,
+      cancel_url: `${origin}/?payment=cancelled#book`,
+    });
+    await sql`UPDATE bookings SET stripe_session_id = ${checkout.id}, status = 'AWAITING_PAYMENT' WHERE id = ${booking.rows[0].id}`;
+    return NextResponse.json({ checkoutUrl: checkout.url });
   } catch (error) {
     console.error("Booking request failed:", error);
     return NextResponse.json({ error: "Booking service is not configured or is temporarily unavailable. Please try again later." }, { status: 503 });
