@@ -9,7 +9,19 @@ export const instant = false;
 
 export default async function AdminPage() {
   const session = await getServerSession(authOptions);
-  if (!session?.user?.isAdmin) return <AdminLogin />;
+  if (!session) return <AdminLogin />;
+  if (!session.user.isAdmin) {
+    return (
+      <main className="grid min-h-screen place-items-center px-6">
+        <div className="w-full max-w-md rounded-3xl border border-white/10 bg-[#24241e] p-8 text-center">
+          <p className="text-xs font-bold tracking-[.25em] text-[#e56a45]">ACCESS RESTRICTED</p>
+          <h1 className="mt-3 text-3xl font-black">No admin access yet.</h1>
+          <p className="mt-3 text-sm leading-6 text-[#aaa69c]">You are signed in as {session.user.email}. An administrator must mark this account as admin before you can view bookings.</p>
+          <Link href="/" className="mt-7 inline-block rounded-full bg-[#f4ba3b] px-6 py-4 text-xs font-black tracking-[.15em] text-[#11110f]">BACK TO BOOKING</Link>
+        </div>
+      </main>
+    );
+  }
 
   await ensureSchema();
   const result = await sql<{
