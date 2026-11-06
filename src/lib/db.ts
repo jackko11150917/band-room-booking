@@ -30,7 +30,10 @@ export function ensureSchema() {
       CREATE INDEX IF NOT EXISTS bookings_schedule_idx
       ON bookings (booking_date, room_id, start_time)
     `;
-  })();
+  })().catch((error) => {
+    schemaReady = undefined;
+    throw error;
+  });
   return schemaReady;
 }
 
