@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
+import Link from "next/link";
 
 type Room = {
   id: string;
@@ -43,7 +44,15 @@ export default function Home() {
     setError("");
     try {
       const response = await fetch("/api/bookings", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ roomId, date, slot, duration, email }) });
-      const result = await response.json() as { error?: string };
+      const responseText = await response.text();
+      let result: { error?: string } = {};
+      if (responseText) {
+        try {
+          result = JSON.parse(responseText) as { error?: string };
+        } catch {
+          result = { error: "The booking service returned an invalid response. Please try again." };
+        }
+      }
       if (!response.ok) throw new Error(result.error ?? "Booking could not be completed.");
       setSubmitted(true);
     } catch (bookingError) {
@@ -58,7 +67,7 @@ export default function Home() {
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-7 lg:px-10">
         <a href="#" className="flex items-center gap-3 text-sm font-bold tracking-[.22em]"><span className="grid h-9 w-9 place-items-center rounded-full bg-[#f4ba3b] text-lg text-[#11110f]">↗</span> ROOM 404</a>
         <div className="hidden items-center gap-8 text-xs font-bold tracking-[.16em] text-[#aaa69c] md:flex"><a href="#rooms" className="transition hover:text-white">ROOMS</a><a href="#how" className="transition hover:text-white">HOW IT WORKS</a><a href="#contact" className="transition hover:text-white">CONTACT</a></div>
-        <a href="#book" className="rounded-full border border-[#f4ba3b] px-5 py-3 text-xs font-bold tracking-[.16em] text-[#f4ba3b] transition hover:bg-[#f4ba3b] hover:text-[#11110f]">BOOK A ROOM</a>
+        <div className="flex items-center gap-2"><Link href="/admin" className="hidden rounded-full border border-white/15 px-4 py-3 text-xs font-bold tracking-[.12em] text-[#aaa69c] transition hover:border-[#f4ba3b] hover:text-[#f4ba3b] sm:block">ADMIN LOGIN</Link><a href="#book" className="rounded-full border border-[#f4ba3b] px-5 py-3 text-xs font-bold tracking-[.16em] text-[#f4ba3b] transition hover:bg-[#f4ba3b] hover:text-[#11110f]">BOOK A ROOM</a></div>
       </nav>
 
       <section className="mx-auto grid max-w-7xl items-end gap-12 px-6 pb-24 pt-16 lg:grid-cols-[1.1fr_.9fr] lg:px-10 lg:pb-32 lg:pt-28">
