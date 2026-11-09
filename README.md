@@ -32,6 +32,7 @@ The first request/login automatically creates the `app_users` and `bookings` tab
 ## Product defaults
 
 - Rooms A, B and C with hourly pricing.
+- One Tiny Band Room with hourly start times.
 - Sessions from 10:00 to 00:00.
 - Booking duration from 1–4 hours.
 - Hong Kong dollars (HKD).

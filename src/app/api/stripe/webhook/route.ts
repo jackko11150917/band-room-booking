@@ -34,7 +34,7 @@ export async function POST(request: Request) {
           from: process.env.EMAIL_FROM ?? "Tiny Band Room <onboarding@resend.dev>",
           to: booking.contact_email,
           subject: "Tiny Band Room 預約已確認",
-          html: `<p>你嘅 ROOM ${booking.room_id.toUpperCase()} 預約已確認。</p><p>日期：${booking.booking_date}<br>時間：${booking.start_time}<br>時數：${booking.duration_hours} 小時</p>`,
+          html: `<p>你嘅 Tiny Band Room 預約已確認。</p><p>日期：${booking.booking_date}<br>時間：${booking.start_time}<br>時數：${booking.duration_hours} 小時</p>`,
         });
       }
     }

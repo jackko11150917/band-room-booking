@@ -3,9 +3,9 @@ import { sql } from "@vercel/postgres";
 import { ensureSchema } from "@/lib/db";
 import Stripe from "stripe";
 
-const roomIds = new Set(["a", "b", "c"]);
-const slots = new Set(["10:00", "12:00", "14:00", "16:00", "18:00", "20:00"]);
-const prices: Record<string, number> = { a: 180, b: 140, c: 240 };
+const roomId = "main";
+const slots = new Set(Array.from({ length: 15 }, (_, index) => `${String(index + 10).padStart(2, "0")}:00`));
+const hourlyPrice = 180;
 
 export async function GET(request: Request) {
   const date = new URL(request.url).searchParams.get("date");
@@ -27,21 +27,20 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json() as {
-      roomId?: string;
       date?: string;
       slot?: string;
       duration?: string;
       email?: string;
     };
     const duration = Number(body.duration);
-    if (!body.roomId || !roomIds.has(body.roomId) || !body.date || !body.slot || !slots.has(body.slot) || !Number.isInteger(duration) || duration < 1 || duration > 4 || !body.email?.includes("@")) {
+    if (!body.date || !body.slot || !slots.has(body.slot) || !Number.isInteger(duration) || duration < 1 || duration > 4 || !body.email?.includes("@")) {
       return NextResponse.json({ error: "Please provide valid booking details." }, { status: 400 });
     }
 
     await ensureSchema();
     const existing = await sql<{ start_time: string; duration_hours: number }>`
       SELECT start_time, duration_hours FROM bookings
-      WHERE room_id = ${body.roomId} AND booking_date = ${body.date}
+      WHERE booking_date = ${body.date}
         AND status != 'CANCELLED'
     `;
     const startMinutes = Number(body.slot.slice(0, 2)) * 60 + Number(body.slot.slice(3));
@@ -55,7 +54,7 @@ export async function POST(request: Request) {
 
     const booking = await sql<{ id: number }>`
       INSERT INTO bookings (room_id, booking_date, start_time, duration_hours, contact_email)
-      VALUES (${body.roomId}, ${body.date}, ${body.slot}, ${duration}, ${body.email.toLowerCase()})
+      VALUES (${roomId}, ${body.date}, ${body.slot}, ${duration}, ${body.email.toLowerCase()})
       RETURNING id
     `;
     if (!process.env.STRIPE_SECRET_KEY) {
@@ -70,8 +69,8 @@ export async function POST(request: Request) {
         quantity: duration,
         price_data: {
           currency: "hkd",
-          unit_amount: prices[body.roomId] * 100,
-          product_data: { name: `ROOM ${body.roomId.toUpperCase()} 排練室` },
+          unit_amount: hourlyPrice * 100,
+          product_data: { name: "Tiny Band Room 排練室" },
         },
       }],
       metadata: { bookingId: String(booking.rows[0].id) },
