@@ -1,6 +1,6 @@
-# ROOM 404 — Band Room Booking
+# Tiny Band Room — Band Room Booking
 
-Next.js booking frontend for a rehearsal / band room business.
+Next.js booking frontend for Tiny Band Room, a rehearsal / band room business.
 
 ## Run locally
 

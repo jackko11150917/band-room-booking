@@ -31,9 +31,9 @@ export async function POST(request: Request) {
       if (booking && process.env.RESEND_API_KEY) {
         const resend = new Resend(process.env.RESEND_API_KEY);
         await resend.emails.send({
-          from: process.env.EMAIL_FROM ?? "ROOM 404 <onboarding@resend.dev>",
+          from: process.env.EMAIL_FROM ?? "Tiny Band Room <onboarding@resend.dev>",
           to: booking.contact_email,
-          subject: "ROOM 404 預約已確認",
+          subject: "Tiny Band Room 預約已確認",
           html: `<p>你嘅 ROOM ${booking.room_id.toUpperCase()} 預約已確認。</p><p>日期：${booking.booking_date}<br>時間：${booking.start_time}<br>時數：${booking.duration_hours} 小時</p>`,
         });
       }
